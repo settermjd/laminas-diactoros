@@ -72,11 +72,15 @@ trait DownloadResponseTrait
      */
     public function overridesDownloadHeaders(array $headers = []) : bool
     {
+        if (empty($headers)) {
+            return false;
+        }
+
         if (array_keys($this->getDownloadHeaders()) === array_keys($headers)) {
             return true;
         }
 
         $diff = array_diff(array_keys($this->getDownloadHeaders()), array_keys($headers));
-        return count($diff) <= 7;
+        return (count($diff) >= 1 && count($diff) <= 7);
     }
 }
