@@ -7,18 +7,18 @@
 
 declare(strict_types=1);
 
-namespace Zend\Diactoros\Response;
+namespace Laminas\Diactoros\Response;
 
 use Psr\Http\Message\StreamInterface;
-use Zend\Diactoros\Exception\InvalidArgumentException;
-use Zend\Diactoros\Response;
-use Zend\Diactoros\Stream;
+use Laminas\Diactoros\Exception\InvalidArgumentException;
+use Laminas\Diactoros\Response;
+use Laminas\Diactoros\Stream;
 
 use function sprintf;
 
 /**
  * Class DownloadResponse
- * @package Zend\Diactoros\Response
+ * @package Laminas\Diactoros\Response
  */
 class DownloadResponse extends Response
 {
@@ -34,7 +34,8 @@ class DownloadResponse extends Response
      * @param int $status Integer status code for the response; 200 by default.
      * @param string $filename The file name to be sent with the response
      * @param string $contentType The content type to be sent with the response
-     * @param array $headers An array of optional headers. These cannot override those set in getDownloadHeaders       */
+     * @param array $headers An array of optional headers. These cannot override those set in getDownloadHeaders
+     */
     public function __construct(
         $body,
         int $status = 200,
@@ -45,10 +46,14 @@ class DownloadResponse extends Response
         $this->filename = $filename;
         $this->contentType = $contentType;
 
+        if ($this->overridesDownloadHeaders($headers)) {
+           throw new InvalidArgumentException('Cannot override download headers');
+        }
+
         parent::__construct(
             $this->createBody($body),
             $status,
-            $this->prepareDownloadHeaders($headers)
+            array_merge($headers, $this->getDownloadHeaders())
         );
     }
 

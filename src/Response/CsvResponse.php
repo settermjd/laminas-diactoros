@@ -7,12 +7,12 @@
 
 declare(strict_types=1);
 
-namespace Zend\Diactoros\Response;
+namespace Laminas\Diactoros\Response;
 
+use Laminas\Diactoros\Exception;
+use Laminas\Diactoros\Response;
+use Laminas\Diactoros\Stream;
 use Psr\Http\Message\StreamInterface;
-use Zend\Diactoros\Exception;
-use Zend\Diactoros\Response;
-use Zend\Diactoros\Stream;
 
 use function get_class;
 use function gettype;
@@ -31,6 +31,10 @@ class CsvResponse extends Response
 {
     use InjectContentTypeTrait;
 
+    const DEFAULT_DELIMITER = ',';
+    const DEFAULT_ENCLOSURE = '"';
+    const DEFAULT_ESCAPE = "\n";
+
     /**
      * Create a CSV response.
      *
@@ -39,20 +43,62 @@ class CsvResponse extends Response
      *
      * @param string|StreamInterface $text String or stream for the message body.
      * @param int $status Integer status code for the response; 200 by default.
-     * @param string $filename
      * @param array $headers Array of headers to use at initialization.
      */
-    public function __construct($text, int $status = 200, string $filename = '', array $headers = [])
+    public function __construct($text, int $status = 200, array $headers = [])
     {
-        if (is_string($filename) && $filename !== '') {
-            $headers = $this->prepareDownloadHeaders($filename, $headers);
-        }
-
         parent::__construct(
             $this->createBody($text),
             $status,
             $this->injectContentType('text/csv; charset=utf-8', $headers)
         );
+    }
+
+    public static function createBodyFromString(string $text) : CsvResponse
+    {
+        $body = new Stream('php://temp', 'wb+');
+        $body->write($text);
+        $body->rewind();
+
+        return new CsvResponse($body);
+    }
+
+    public static function createBodyFromFile(string $fileName)
+    {
+        $resource = fopen($fileName, 'r');
+        $body = new Stream($resource);
+        $body->rewind();
+
+        return new CsvResponse($body);
+    }
+
+    /**
+     * @param array|\Traversable $content
+     * @param string $delimiter
+     * @param string $enclosure
+     * @param string $escape
+     * @return CsvResponse
+     */
+    public static function createBodyFromArray(
+        $content,
+        string $delimiter = self::DEFAULT_DELIMITER,
+        string $enclosure = self::DEFAULT_ENCLOSURE,
+        string $escape = self::DEFAULT_ESCAPE
+    ) {
+        $text = '';
+        $convertedRow = function ($row) use($enclosure) {
+            $output = [];
+            foreach ($row as $item) {
+                $output[] = sprintf('%1$s%2$s%1$s', $enclosure, $item);
+            }
+            return $output;
+        };
+
+        foreach ($content as $row) {
+            $text .= sprintf("%s%s", implode($delimiter, $convertedRow($row)), $escape);
+        }
+
+        return new CsvResponse($text);
     }
 
     /**

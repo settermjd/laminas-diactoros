@@ -7,13 +7,14 @@
 
 declare(strict_types=1);
 
-namespace ZendTest\Diactoros\Response;
+namespace LaminasTest\Diactoros\Response;
 
-use org\bovigo\vfs\vfsStream;
+use Laminas\Diactoros\Exception\InvalidArgumentException;
+use Laminas\Diactoros\Response;
+use Laminas\Diactoros\Response\DownloadResponse;
+use Laminas\Diactoros\Stream;
 use PHPUnit\Framework\TestCase;
-use Zend\Diactoros\Response;
-use Zend\Diactoros\Response\DownloadResponse;
-use Zend\Diactoros\Stream;
+use org\bovigo\vfs\vfsStream;
 
 class DownloadResponseTest extends TestCase
 {
@@ -108,16 +109,71 @@ EOF;
     ) : void {
         $requiredHeaders = [
             'cache-control' => 'must-revalidate',
-            'content-description' => 'File Transfer',
+            'content-description' => 'file transfer',
             'content-disposition' => sprintf('attachment; filename=%s', $filename),
-            'content-transfer-encoding' => 'Binary',
+            'content-transfer-encoding' => 'binary',
             'content-type' => $contentType,
             'expires' => '0',
-            'pragma' => 'Public'
+            'pragma' => 'public'
         ];
         foreach ($requiredHeaders as $header => $value) {
             $this->assertTrue($response->hasHeader($header));
             $this->assertSame($value, $response->getHeaderLine($header));
         }
+    }
+
+    /**
+     * @dataProvider overrideDownloadHeaderDataProvider
+     * @param array $headers A list of headers to use to initialise the DownloadResponse object
+     */
+    public function testCannotOverrideDownloadHeaders(array $headers = [])
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Cannot override download headers');
+
+        $body = new Stream($this->root->url() . '/files/valid.csv');
+        new DownloadResponse(
+            $body,
+            200,
+            DownloadResponse::DEFAULT_DOWNLOAD_FILENAME,
+            DownloadResponse::DEFAULT_CONTENT_TYPE,
+            $headers
+        );
+    }
+
+    public function overrideDownloadHeaderDataProvider() : array
+    {
+        return [
+            [
+                [
+                    'cache-control' => 'must-revalidate',
+                    'content-description' => 'file transfer',
+                    'content-disposition' => sprintf('attachment; filename=%s', DownloadResponse::DEFAULT_DOWNLOAD_FILENAME),
+                    'content-transfer-encoding' => 'binary',
+                    'content-type' => DownloadResponse::DEFAULT_CONTENT_TYPE,
+                    'expires' => '0',
+                    'pragma' => 'public'
+                ]
+            ],
+            [
+                []
+            ],
+            [
+                [
+                    'cache-control' => 'must-revalidate',
+                ]
+            ],
+            [
+                [
+                    'accept-language' => 'en-AU'
+                ]
+            ],
+            [
+                [
+                    'accept' => "text/html",
+                    'accept-language' => 'en-AU'
+                ]
+            ],
+        ];
     }
 }

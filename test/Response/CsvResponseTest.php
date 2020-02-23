@@ -7,17 +7,17 @@
 
 declare(strict_types=1);
 
-namespace ZendTest\Diactoros\Response;
+namespace LaminasTest\Diactoros\Response;
 
 use InvalidArgumentException;
+use Laminas\Diactoros\Response\CsvResponse;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\StreamInterface;
-use Zend\Diactoros\Response\CsvResponse;
 
 /**
  * Class CsvResponseTest
- * @package ZendTest\Diactoros\Response
- * @coversDefaultClass \Zend\Diactoros\Response\CsvResponse
+ * @package LaminasTest\Diactoros\Response
+ * @coversDefaultClass \Laminas\Diactoros\Response\CsvResponse
  */
 class CsvResponseTest extends TestCase
 {
@@ -50,7 +50,7 @@ EOF;
         ];
         $filename = '';
 
-        $response = new CsvResponse(self::VALID_CSV_BODY, $status, $filename, $headers);
+        $response = new CsvResponse(self::VALID_CSV_BODY, $status, $headers);
         $this->assertSame(['foo-bar'], $response->getHeader('x-custom'));
         $this->assertSame('text/csv; charset=utf-8', $response->getHeaderLine('content-type'));
         $this->assertSame(404, $response->getStatusCode());
