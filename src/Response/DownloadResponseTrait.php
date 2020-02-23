@@ -38,6 +38,9 @@ trait DownloadResponseTrait
     /**
      * Retrieve the download headers
      *
+     * This function retrieves an array of the headers required to send a download response.
+     * For this to work properly, once set, these headers should not be overridden, unless specifically required.
+     *
      * @return array
      */
     private function getDownloadHeaders(): array
