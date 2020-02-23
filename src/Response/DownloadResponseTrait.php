@@ -5,16 +5,9 @@
  * @license   https://github.com/laminas/laminas-diactoros/blob/master/LICENSE.md New BSD License
  */
 
-
 namespace Laminas\Diactoros\Response;
 
-use Laminas\Diactoros\Response;
-use Psr\Http\Message\MessageInterface;
-use Laminas\Diactoros\Exception\InvalidArgumentException;
 use function array_keys;
-use function array_merge;
-use function implode;
-use function in_array;
 
 trait DownloadResponseTrait
 {
